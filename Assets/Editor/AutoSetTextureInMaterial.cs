@@ -3,20 +3,21 @@ using UnityEngine;
 using UnityEditor;
 using System.IO;
 
-#region enum
-//enum AlbedoType { Everything, Albedo, Base_Color,}
-//enum NormalType { Everything, Normal, OpenGL}
-//enum AOType {Everything, AO, Mixed_AO }
-#endregion
 
-public class SetTexture 
+
+public class FindTexture 
 {
 
     public static List<Material> material = new List<Material>();
-    List<string> path = new List<string>();
-    static Object FBX;
 
-    private List<string> GetDirectoryFBX()
+
+    static List<string> path = new List<string>();
+
+
+    bool InProject = false;
+    bool ForObject = false;
+
+    private static List<string> GetDirectoryFBX()
     {
         string[] files = Directory.GetFiles(Application.dataPath, "*.fbx", SearchOption.AllDirectories);
 
@@ -40,8 +41,6 @@ public class SetTexture
             material.Add(tmp);
             SetTExture(tmp, path);
         }
-
-
         foreach (var item in material)
         {
             item.EnableKeyword("_NORMALMAP");
@@ -49,15 +48,7 @@ public class SetTexture
             item.EnableKeyword("_SPECGLOSSMAP");
 
         }
-    }
 
-
-    [MenuItem("Assets/SetTexture")]
-    private static void SetMaterial()
-    {
-        FindTextureFBX(Selection.activeGameObject);
-        Debug.Log("Complited");
-        
     }
 
     static void SetTExture(Material material, string path)
@@ -80,7 +71,7 @@ public class SetTexture
             {
                 material.SetTexture("_OcclusionMap", item);
             }
-                
+
             if (item.name.Contains(material.name) && item.name.Contains("Metalic"))
             {
                 material.SetTexture("_MetallicGlossMap", item);
@@ -131,19 +122,46 @@ public class SetTexture
         {
             Texture temp = (Texture)AssetDatabase.LoadAssetAtPath(item, typeof(Texture));
             tmp.Add(temp);
-            
+
         }
-        
+
         return tmp;
     }
 
-     static void FindTextureFBX(GameObject a)
+    static void FindTextureFBX(GameObject obj)
     {
-        string tmp = EditorUtility.GetAssetPath(a);
-        Debug.Log(tmp);
+        string tmp = EditorUtility.GetAssetPath(obj);
+       
         tmp = tmp.Remove(tmp.LastIndexOf('/'), tmp.Length - tmp.LastIndexOf('/'));
-        
-        if(a!=null) SetMaterial(tmp); 
+        SetMaterial(tmp);
     }
 
+    [MenuItem("Assets/SetTextureObject")]
+    private static void SetTextureObject()
+    {
+        
+            FindTextureFBX(Selection.activeGameObject);
+            Debug.Log("Complited");
+    }
+
+    [MenuItem("Assets/SetTextureProject")]
+    private static void SetTextureProject()
+    {
+        path = GetDirectoryFBX();
+        foreach (var item in path)
+        {
+            SetMaterial(item);
+        }
+        Debug.Log("Complited");
+   
+    }
+
+    [MenuItem("Assets/SetTextureObject", true)]
+    private static bool NewMenuOptionValidation()
+    {
+        return Selection.activeObject.GetType() == typeof(GameObject);
+    }
+
+
 }
+
